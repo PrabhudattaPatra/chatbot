@@ -1,0 +1,10 @@
+langchain
+langgraph
+langchain-openai
+langchain_community
+langchain-chroma
+langchain-core
+pypdf
+pdf2image
+pandas
+langchain-tavily
