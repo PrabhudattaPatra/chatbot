@@ -8,3 +8,7 @@ pypdf
 pdf2image
 pandas
 langchain-tavily
+bs4
+langchain-postgres
+psycopg2
+structlog
