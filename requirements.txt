@@ -12,3 +12,4 @@ bs4
 langchain-postgres
 psycopg2
 structlog
+langgraph-checkpoint-postgres

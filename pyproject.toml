@@ -14,9 +14,11 @@ dependencies = [
     "langchain-postgres>=0.0.16",
     "langchain-tavily>=0.2.14",
     "langgraph>=1.0.5",
+    "langgraph-checkpoint-postgres>=3.0.2",
     "pandas>=2.3.3",
     "pdf2image>=1.17.0",
     "psycopg2>=2.9.11",
+    "psycopg[binary,pool]>=3.3.2",
     "pypdf>=6.4.2",
     "structlog>=25.5.0",
 ]
