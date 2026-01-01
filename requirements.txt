@@ -27,3 +27,4 @@ accelerate
 pillow
 langchain-google-genai
 fastapi
+streamlit

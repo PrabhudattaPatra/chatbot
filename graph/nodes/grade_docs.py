@@ -1,14 +1,12 @@
 import logging
 from typing import Literal
-from pydantic import BaseModel, Field
 from langchain_core.messages import ToolMessage, HumanMessage
-
+from core.models import GradeDocuments
 from graph.prompts import GRADE_PROMPT
 
 logger = logging.getLogger(__name__)
 
-class GradeDocuments(BaseModel):
-    binary_score: Literal["yes", "no"] = Field(...)
+
 
 def _latest_user_question(messages):
     for msg in reversed(messages):

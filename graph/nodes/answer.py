@@ -14,9 +14,12 @@ def generate_answer(state, llm):
 
     messages = [
         SystemMessage(content=GENERATE_SYSTEM_PROMPT),
-        HumanMessage(
-            content=f"Question:\n{question}\n\nContext:\n{context}"
-        ),
+        HumanMessage(content=f"""
+Use the following pieces of retrieved context to answer the question. 
+If tools answer is not related to the user question, just say that you don't know. 
+Question: {question}
+Context: {context}
+""")
     ]
 
     response = llm.invoke(messages)

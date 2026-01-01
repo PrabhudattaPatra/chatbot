@@ -1,15 +1,11 @@
 import logging
-from typing import Literal
-from pydantic import BaseModel, Field
 from langchain.messages import HumanMessage
 from langgraph.graph import END
-
+from core.models import HallucinationCheck
 from graph.prompts import HALLUCINATION_PROMPT
 
 logger = logging.getLogger(__name__)
 
-class HallucinationCheck(BaseModel):
-    hallucination: Literal["yes", "no"] = Field(...)
 
 def check_hallucination(state, llm):
     question = next(
@@ -34,6 +30,14 @@ def check_hallucination(state, llm):
     )
 
     if retry_count >= 2:
+        logger.warning(
+            "Max hallucination retries reached → accepting current answer"
+        )
         return END
 
-    return "generate_answer" if result.hallucination == "yes" else END
+    # 🔁 Retry path
+    if result.hallucination == "yes":
+        return "rewrite_question"
+
+    # ✅ Accept answer
+    return END

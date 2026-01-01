@@ -1,0 +1,321 @@
+[2026-01-01 13:11:08,616] [INFO] app.main :: CGU RAG Agent FastAPI app initialized
+[2026-01-01 13:13:42,466] [INFO] app.main :: CGU RAG Agent FastAPI app initialized
+[2026-01-01 13:13:48,178] [ERROR] app.routers.query :: Chat endpoint failed
+Traceback (most recent call last):
+  File "D:\abhi_project\app\routers\query.py", line 66, in chat_endpoint
+    async for chunk in graph.astream(inputs, config, stream_mode="updates"):
+    ...<6 lines>...
+                        final_answer = msg.content
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\pregel\main.py", line 2888, in astream
+    async with AsyncPregelLoop(
+               ~~~~~~~~~~~~~~~^
+        input,
+        ^^^^^^
+    ...<17 lines>...
+        cache_policy=self.cache_policy,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ) as loop:
+    ^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\pregel\_loop.py", line 1188, in __init__
+    self.checkpointer_get_next_version = checkpointer.get_next_version
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: '_AsyncGeneratorContextManager' object has no attribute 'get_next_version'
+[2026-01-01 13:30:05,518] [INFO] app.main :: CGU RAG Agent FastAPI app initialized
+[2026-01-01 13:31:15,893] [INFO] graph.checkpointing :: Initializing AsyncPostgresSaver
+[2026-01-01 13:31:15,893] [ERROR] app.routers.query :: Chat endpoint failed
+Traceback (most recent call last):
+  File "D:\abhi_project\app\routers\query.py", line 48, in chat_endpoint
+    checkpointer = await get_checkpointer()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\abhi_project\graph\checkpointing.py", line 22, in get_checkpointer
+    _checkpointer = await AsyncPostgresSaver.from_conn_string(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        DATABASE_URL
+        ^^^^^^^^^^^^
+    )
+    ^
+TypeError: object _AsyncGeneratorContextManager can't be used in 'await' expression
+[2026-01-01 13:32:13,695] [INFO] app.main :: CGU RAG Agent FastAPI app initialized
+[2026-01-01 13:36:55,571] [INFO] app.main :: CGU RAG Agent FastAPI app initialized
+[2026-01-01 13:36:55,573] [INFO] app.main :: Starting CGU RAG Agent
+[2026-01-01 13:36:56,024] [INFO] app.main :: Opening Postgres checkpoint connection
+[2026-01-01 13:39:09,931] [INFO] app.main :: Shutting down CGU RAG Agent
+[2026-01-01 13:39:16,323] [INFO] app.main :: CGU RAG Agent FastAPI app initialized
+[2026-01-01 13:39:16,324] [INFO] app.main :: Starting CGU RAG Agent
+[2026-01-01 13:39:16,891] [INFO] app.main :: Opening Postgres checkpoint connection
+[2026-01-01 13:39:44,119] [INFO] httpx :: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-01-01 13:40:07,134] [INFO] httpx :: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-01-01 13:40:07,141] [INFO] core.embedding_model :: Loading embeddings: nomic-ai/nomic-embed-text-v1.5
+[2026-01-01 13:40:19,665] [INFO] sentence_transformers.SentenceTransformer :: Use pytorch device_name: cpu
+[2026-01-01 13:40:19,665] [INFO] sentence_transformers.SentenceTransformer :: Load pretrained SentenceTransformer: nomic-ai/nomic-embed-text-v1.5
+[2026-01-01 13:40:27,740] [WARNING] transformers_modules.nomic_hyphen_ai.nomic_hyphen_bert_hyphen_2048.7710840340a098cfb869c4f65e87cf2b1b70caca.modeling_hf_nomic_bert :: <All keys matched successfully>
+[2026-01-01 13:40:29,956] [INFO] core.pinecone_client :: Initializing Pinecone client
+[2026-01-01 13:40:33,762] [INFO] core.pinecone_client :: Connected to Pinecone index: cgu-test-index
+[2026-01-01 13:40:33,762] [INFO] tools.retrievers :: Building retriever for index: cgu-test-index
+[2026-01-01 13:40:38,618] [ERROR] app.routers.query :: Chat endpoint failed
+Traceback (most recent call last):
+  File "D:\abhi_project\app\routers\query.py", line 33, in chat_endpoint
+    async for chunk in graph.astream(inputs, config, stream_mode="updates"):
+    ...<6 lines>...
+                        final_answer = msg.content
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\pregel\main.py", line 2971, in astream
+    async for _ in runner.atick(
+    ...<13 lines>...
+            yield o
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\pregel\_runner.py", line 304, in atick
+    await arun_with_retry(
+    ...<15 lines>...
+    )
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\pregel\_retry.py", line 137, in arun_with_retry
+    return await task.proc.ainvoke(task.input, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\_internal\_runnable.py", line 711, in ainvoke
+    input = await step.ainvoke(input, config)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\_internal\_runnable.py", line 473, in ainvoke
+    ret = await self.afunc(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\graph\_branch.py", line 189, in _aroute
+    result = await self.path.ainvoke(value, config)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\_internal\_runnable.py", line 464, in ainvoke
+    ret = await asyncio.create_task(coro, context=context)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\abhi_project\.venv\Lib\site-packages\langchain_core\runnables\config.py", line 608, in run_in_executor
+    return await asyncio.get_running_loop().run_in_executor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+    )
+    ^
+  File "C:\Users\PRABHUDATTA\AppData\Roaming\uv\python\cpython-3.13.5-windows-x86_64-none\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "D:\abhi_project\.venv\Lib\site-packages\langchain_core\runnables\config.py", line 599, in wrapper
+    return func(*args, **kwargs)
+TypeError: grade_documents() missing 1 required positional argument: 'llm'
+During task with name 'retrieve' and id '2e321e7e-56e1-0d00-1947-0cc599aa8c34'
+[2026-01-01 13:45:37,745] [INFO] app.main :: Shutting down CGU RAG Agent
+[2026-01-01 13:45:45,532] [INFO] app.main :: CGU RAG Agent FastAPI app initialized
+[2026-01-01 13:45:45,533] [INFO] app.main :: Starting CGU RAG Agent
+[2026-01-01 13:45:46,110] [INFO] app.main :: Opening Postgres checkpoint connection
+[2026-01-01 13:45:59,553] [ERROR] app.routers.query :: Chat endpoint failed
+Traceback (most recent call last):
+  File "D:\abhi_project\app\routers\query.py", line 33, in chat_endpoint
+    async for chunk in graph.astream(inputs, config, stream_mode="updates"):
+    ...<6 lines>...
+                        final_answer = msg.content
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\pregel\main.py", line 2888, in astream
+    async with AsyncPregelLoop(
+               ~~~~~~~~~~~~~~~^
+        input,
+        ^^^^^^
+    ...<17 lines>...
+        cache_policy=self.cache_policy,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ) as loop:
+    ^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\pregel\_loop.py", line 1264, in __aenter__
+    saved = await self.checkpointer.aget_tuple(self.checkpoint_config)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\checkpoint\postgres\aio.py", line 198, in aget_tuple
+    await cur.execute(
+    ...<3 lines>...
+    )
+  File "D:\abhi_project\.venv\Lib\site-packages\psycopg\cursor_async.py", line 117, in execute
+    raise ex.with_traceback(None)
+psycopg.OperationalError: consuming input failed: SSL connection has been closed unexpectedly
+[2026-01-01 13:50:01,185] [ERROR] app.routers.query :: Chat endpoint failed
+Traceback (most recent call last):
+  File "D:\abhi_project\app\routers\query.py", line 33, in chat_endpoint
+    async for chunk in graph.astream(inputs, config, stream_mode="updates"):
+    ...<6 lines>...
+                        final_answer = msg.content
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\pregel\main.py", line 2888, in astream
+    async with AsyncPregelLoop(
+               ~~~~~~~~~~~~~~~^
+        input,
+        ^^^^^^
+    ...<17 lines>...
+        cache_policy=self.cache_policy,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ) as loop:
+    ^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\pregel\_loop.py", line 1264, in __aenter__
+    saved = await self.checkpointer.aget_tuple(self.checkpoint_config)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\checkpoint\postgres\aio.py", line 197, in aget_tuple
+    async with self._cursor() as cur:
+               ~~~~~~~~~~~~^^
+  File "C:\Users\PRABHUDATTA\AppData\Roaming\uv\python\cpython-3.13.5-windows-x86_64-none\Lib\contextlib.py", line 214, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\checkpoint\postgres\aio.py", line 391, in _cursor
+    async with conn.cursor(binary=True, row_factory=dict_row) as cur:
+               ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\abhi_project\.venv\Lib\site-packages\psycopg\connection_async.py", line 260, in cursor
+    self._check_connection_ok()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\abhi_project\.venv\Lib\site-packages\psycopg\_connection_base.py", line 532, in _check_connection_ok
+    raise e.OperationalError("the connection is closed")
+psycopg.OperationalError: the connection is closed
+[2026-01-01 14:08:19,121] [INFO] app.main :: Shutting down CGU RAG Agent
+[2026-01-01 14:12:28,411] [INFO] app.main :: CGU RAG Agent FastAPI app initialized
+[2026-01-01 14:12:28,412] [INFO] app.main :: Starting CGU RAG Agent
+[2026-01-01 14:12:28,995] [INFO] app.main :: Opening Postgres checkpoint connection
+[2026-01-01 14:12:56,548] [ERROR] app.routers.query :: Chat endpoint failed
+Traceback (most recent call last):
+  File "D:\abhi_project\app\routers\query.py", line 33, in chat_endpoint
+    async for chunk in graph.astream(inputs, config, stream_mode="updates"):
+    ...<6 lines>...
+                        final_answer = msg.content
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\pregel\main.py", line 2971, in astream
+    async for _ in runner.atick(
+    ...<13 lines>...
+            yield o
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\pregel\_runner.py", line 304, in atick
+    await arun_with_retry(
+    ...<15 lines>...
+    )
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\pregel\_retry.py", line 137, in arun_with_retry
+    return await task.proc.ainvoke(task.input, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\_internal\_runnable.py", line 705, in ainvoke
+    input = await asyncio.create_task(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+        step.ainvoke(input, config, **kwargs), context=context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\_internal\_runnable.py", line 473, in ainvoke
+    ret = await self.afunc(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\abhi_project\.venv\Lib\site-packages\langchain_core\runnables\config.py", line 608, in run_in_executor
+    return await asyncio.get_running_loop().run_in_executor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+    )
+    ^
+  File "C:\Users\PRABHUDATTA\AppData\Roaming\uv\python\cpython-3.13.5-windows-x86_64-none\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "D:\abhi_project\.venv\Lib\site-packages\langchain_core\runnables\config.py", line 599, in wrapper
+    return func(*args, **kwargs)
+TypeError: generate_query_or_respond() missing 1 required positional argument: 'llm'
+During task with name 'generate_query_or_respond' and id 'd8145f24-2601-4c34-5338-42c7f6c673af'
+[2026-01-01 14:15:54,474] [INFO] app.main :: Shutting down CGU RAG Agent
+[2026-01-01 14:16:02,556] [INFO] app.main :: CGU RAG Agent FastAPI app initialized
+[2026-01-01 14:16:02,557] [INFO] app.main :: Starting CGU RAG Agent
+[2026-01-01 14:16:03,181] [INFO] app.main :: Opening Postgres checkpoint connection
+[2026-01-01 14:16:24,787] [INFO] httpx :: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-01-01 14:16:24,817] [INFO] core.embedding_model :: Loading embeddings: nomic-ai/nomic-embed-text-v1.5
+[2026-01-01 14:16:29,039] [INFO] sentence_transformers.SentenceTransformer :: Use pytorch device_name: cpu
+[2026-01-01 14:16:29,039] [INFO] sentence_transformers.SentenceTransformer :: Load pretrained SentenceTransformer: nomic-ai/nomic-embed-text-v1.5
+[2026-01-01 14:16:37,329] [WARNING] transformers_modules.nomic_hyphen_ai.nomic_hyphen_bert_hyphen_2048.7710840340a098cfb869c4f65e87cf2b1b70caca.modeling_hf_nomic_bert :: <All keys matched successfully>
+[2026-01-01 14:16:39,962] [INFO] core.pinecone_client :: Initializing Pinecone client
+[2026-01-01 14:16:42,920] [INFO] core.pinecone_client :: Connected to Pinecone index: cgu-examination-index
+[2026-01-01 14:16:42,920] [INFO] tools.retrievers :: Building retriever for index: cgu-examination-index
+[2026-01-01 14:16:47,405] [INFO] httpx :: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-01-01 14:16:47,413] [INFO] graph.nodes.grade_docs :: Document relevance: yes (rewrite_count=0)
+[2026-01-01 14:16:48,074] [INFO] httpx :: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-01-01 14:16:48,403] [INFO] httpx :: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-01-01 14:16:48,406] [INFO] graph.nodes.hallucination :: Hallucination=yes (retry_count=1)
+[2026-01-01 14:16:48,838] [ERROR] app.routers.query :: Chat endpoint failed
+Traceback (most recent call last):
+  File "D:\abhi_project\app\routers\query.py", line 33, in chat_endpoint
+    async for chunk in graph.astream(inputs, config, stream_mode="updates"):
+    ...<6 lines>...
+                        final_answer = msg.content
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\pregel\main.py", line 2971, in astream
+    async for _ in runner.atick(
+    ...<13 lines>...
+            yield o
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\pregel\_runner.py", line 304, in atick
+    await arun_with_retry(
+    ...<15 lines>...
+    )
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\pregel\_retry.py", line 137, in arun_with_retry
+    return await task.proc.ainvoke(task.input, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\_internal\_runnable.py", line 711, in ainvoke
+    input = await step.ainvoke(input, config)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\_internal\_runnable.py", line 473, in ainvoke
+    ret = await self.afunc(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\graph\_branch.py", line 190, in _aroute
+    return self._finish(writer, input, result, config)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\graph\_branch.py", line 203, in _finish
+    r if isinstance(r, Send) else self.ends[r] for r in result
+                                  ~~~~~~~~~^^^
+KeyError: 'generate_answer'
+During task with name 'generate_answer' and id '99069bd9-db22-0a39-b6e1-c33171f8440a'
+[2026-01-01 17:57:13,195] [INFO] app.main :: Shutting down CGU RAG Agent
+[2026-01-01 18:04:44,945] [INFO] app.main :: CGU RAG Agent FastAPI app initialized
+[2026-01-01 18:04:44,946] [INFO] app.main :: Starting CGU RAG Agent
+[2026-01-01 18:04:45,630] [INFO] app.main :: Opening Postgres checkpoint connection
+[2026-01-01 18:05:14,262] [INFO] httpx :: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-01-01 18:05:14,315] [INFO] core.embedding_model :: Loading embeddings: nomic-ai/nomic-embed-text-v1.5
+[2026-01-01 18:05:22,097] [INFO] sentence_transformers.SentenceTransformer :: Use pytorch device_name: cpu
+[2026-01-01 18:05:22,097] [INFO] sentence_transformers.SentenceTransformer :: Load pretrained SentenceTransformer: nomic-ai/nomic-embed-text-v1.5
+[2026-01-01 18:05:33,580] [WARNING] transformers_modules.nomic_hyphen_ai.nomic_hyphen_bert_hyphen_2048.7710840340a098cfb869c4f65e87cf2b1b70caca.modeling_hf_nomic_bert :: <All keys matched successfully>
+[2026-01-01 18:05:36,877] [INFO] core.pinecone_client :: Initializing Pinecone client
+[2026-01-01 18:05:40,091] [INFO] core.pinecone_client :: Connected to Pinecone index: cgu-examination-index
+[2026-01-01 18:05:40,091] [INFO] tools.retrievers :: Building retriever for index: cgu-examination-index
+[2026-01-01 18:05:44,548] [INFO] httpx :: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-01-01 18:05:44,560] [INFO] graph.nodes.grade_docs :: Document relevance: yes (rewrite_count=0)
+[2026-01-01 18:05:46,336] [INFO] httpx :: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-01-01 18:05:46,587] [INFO] httpx :: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-01-01 18:05:46,599] [INFO] graph.nodes.hallucination :: Hallucination=no (retry_count=1)
+[2026-01-01 18:14:04,959] [ERROR] app.routers.query :: Chat endpoint failed
+Traceback (most recent call last):
+  File "D:\abhi_project\app\routers\query.py", line 33, in chat_endpoint
+    async for chunk in graph.astream(inputs, config, stream_mode="updates"):
+    ...<6 lines>...
+                        final_answer = msg.content
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\pregel\main.py", line 2888, in astream
+    async with AsyncPregelLoop(
+               ~~~~~~~~~~~~~~~^
+        input,
+        ^^^^^^
+    ...<17 lines>...
+        cache_policy=self.cache_policy,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ) as loop:
+    ^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\pregel\_loop.py", line 1264, in __aenter__
+    saved = await self.checkpointer.aget_tuple(self.checkpoint_config)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\abhi_project\.venv\Lib\site-packages\langgraph\checkpoint\postgres\aio.py", line 198, in aget_tuple
+    await cur.execute(
+    ...<3 lines>...
+    )
+  File "D:\abhi_project\.venv\Lib\site-packages\psycopg\cursor_async.py", line 117, in execute
+    raise ex.with_traceback(None)
+psycopg.OperationalError: consuming input failed: SSL connection has been closed unexpectedly
+[2026-01-01 18:20:27,293] [INFO] app.main :: Shutting down CGU RAG Agent
+[2026-01-01 18:20:40,462] [INFO] app.main :: CGU RAG Agent FastAPI app initialized
+[2026-01-01 18:20:40,463] [INFO] app.main :: Starting CGU RAG Agent
+[2026-01-01 18:20:41,155] [INFO] app.main :: Opening Postgres checkpoint connection
+[2026-01-01 18:21:46,554] [INFO] app.main :: Shutting down CGU RAG Agent
+[2026-01-01 18:21:58,691] [INFO] app.main :: CGU RAG Agent FastAPI app initialized
+[2026-01-01 18:21:58,692] [INFO] app.main :: Starting CGU RAG Agent
+[2026-01-01 18:21:59,323] [INFO] app.main :: Opening Postgres checkpoint connection
+[2026-01-01 18:22:23,431] [INFO] httpx :: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-01-01 18:22:23,491] [INFO] core.embedding_model :: Loading embeddings: nomic-ai/nomic-embed-text-v1.5
+[2026-01-01 18:22:30,387] [INFO] sentence_transformers.SentenceTransformer :: Use pytorch device_name: cpu
+[2026-01-01 18:22:30,387] [INFO] sentence_transformers.SentenceTransformer :: Load pretrained SentenceTransformer: nomic-ai/nomic-embed-text-v1.5
+[2026-01-01 18:22:38,701] [WARNING] transformers_modules.nomic_hyphen_ai.nomic_hyphen_bert_hyphen_2048.7710840340a098cfb869c4f65e87cf2b1b70caca.modeling_hf_nomic_bert :: <All keys matched successfully>
+[2026-01-01 18:22:40,882] [INFO] core.pinecone_client :: Initializing Pinecone client
+[2026-01-01 18:22:43,664] [INFO] core.pinecone_client :: Connected to Pinecone index: cgu-examination-index
+[2026-01-01 18:22:43,665] [INFO] tools.retrievers :: Building retriever for index: cgu-examination-index
+[2026-01-01 18:22:47,629] [INFO] httpx :: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-01-01 18:22:47,636] [INFO] graph.nodes.grade_docs :: Document relevance: yes (rewrite_count=0)
+[2026-01-01 18:22:48,124] [INFO] httpx :: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-01-01 18:22:48,337] [INFO] httpx :: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-01-01 18:22:48,341] [INFO] graph.nodes.hallucination :: Hallucination=yes (retry_count=1)
+[2026-01-01 18:22:48,920] [INFO] httpx :: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-01-01 18:22:50,416] [ERROR] app.routers.query :: Chat endpoint failed
+Traceback (most recent call last):
+  File "D:\abhi_project\app\routers\query.py", line 43, in chat_endpoint
+    raise ValueError("No response generated")
+ValueError: No response generated
+[2026-01-01 18:27:39,645] [INFO] app.main :: Shutting down CGU RAG Agent
