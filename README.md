@@ -1,50 +1,66 @@
-# RAG-based Chatbot with Self-Correction and Hallucination Detection
+# CGU Agentic RAG Bot
 
-A sophisticated Retrieval-Augmented Generation (RAG) chatbot system built with LangGraph that features document retrieval, answer generation, quality grading, and hallucination detection for C.V. Raman Global University (CGU) queries.
+An advanced Multimodal Retrieval-Augmented Generation (RAG) system built with LangGraph, LangChain, FastAPI and Pinecone. It features a self-correcting loop that grades retrieved documents, rewrites queries for better accuracy, and performs hallucination checks before answering.
 
-## 🌟 Features
+## Project Structure
 
-- **Intelligent Document Retrieval**: Uses ChromaDB vector store with OpenAI embeddings for semantic search
-- **Multi-Source Information**: Combines local document retrieval with web search using Tavily
-- **Self-Correcting RAG**: Automatically grades document relevance and rewrites queries if needed
-- **Hallucination Detection**: Validates generated answers to ensure factual accuracy
-- **Iterative Refinement**: Loops back to regenerate answers or rewrite questions based on quality checks
-- **Loop Limiting**: Prevents infinite loops with configurable maximum retry attempts
+The implementation is organized into modular components for scalability and maintainability:
 
-## 🏗️ Architecture
+**vector_store.py**  
+Manages connections to Pinecone indices (`cgu-test-index`, `cgu-examination-index`, `cgu-notice-index`) and initializes HuggingFaceEmbeddings using the `nomic-embed-text-v1.5` model.
 
-The system uses a state graph with the following nodes:
+**tools.py**  
+Defines specialized LangChain tools:
 
-1. **generate_query_or_respond**: Initial LLM call that decides whether to retrieve documents or respond directly
-2. **retrieve**: Fetches relevant documents using retriever tool or web search
-3. **grade_documents**: Evaluates document relevance to the user's question
-4. **rewrite_question**: Reformulates the question if documents aren't relevant
-5. **generate_answer**: Creates an answer based on retrieved context
-6. **check_hallucination**: Validates the answer for factual accuracy
+- `retrieve_blog_posts`: Fetches general university info (fees, admissions, scholarships).
+- `retrieve_examination_cell_doc`: Fetches exam schedules and circulars.
+- `retrieve_notice_board_doc`: Fetches academic calendar updates and official announcements.
 
-## 📋 Prerequisites
-```bash
-uv add -r requirements.txt
-```
+**Note:** Documents are processed using a multimodal ingestion pipeline:  
+Scan PDF → Images → OCR + LLM-based summarization → Stored in a dedicated examination vector store for fast retrieval.
 
-## ⚙️ Environment Setup
+- `websearch_tool`: Integrated via TavilySearch to monitor real-time updates from official social channels.
 
-Create a `.env` file with your API keys:
-```env
-OPENAI_API_KEY=your_openai_api_key
-TAVILY_API_KEY=your_tavily_api_key
-```
+**agent.py**  
+Contains the LangGraph state machine logic, including nodes for retrieval, grading, answering, and query rewriting.
 
-## 📁 Project Structure
-```
-.
-├── data/                          # PDF documents directory
-├── my_chroma_db/                  # ChromaDB vector store
-├── rag_copy.ipynb                 # Main notebook
-├── .env                           # Environment variables
-└── README.md                      # This file
-```
-## 🔄 Graph Workflow
-The RAG system follows this workflow:
+**evaluation.py**  
+Implements LangSmith evaluation suites for Correctness, Groundedness, Relevance, and Retrieval Relevance.
 
-![RAG Workflow Graph](/image/workflow_graph.jpg)
+## Key Features
+
+**Agentic Decision Making**  
+The `generate_query_or_respond` node dynamically decides whether to use a tool or respond directly based on the user's intent.
+
+**Multi-Index MMR Search**  
+Uses Maximum Marginal Relevance (MMR) for diverse document retrieval across three distinct specialized indices.
+
+**Self-Correction Loop**
+- **Document Grading:** Evaluates retrieved documents on a binary `yes` / `no` scale for relevance.
+- **Query Rewriting:** Automatically reformulates the question if initial retrieval is deemed irrelevant.
+- **Hallucination Detection:** Compares the generated answer against the source context; if it fails twice, it returns the best available answer.
+
+**State Persistence**  
+Implements `AsyncPostgresSaver` for persistent thread management, allowing for multi-turn conversations.
+
+## LangGraph Workflow
+
+![RAG Workflow Graph](D:\abhi_project\image.png)
+
+## Technical Stack
+
+- **LLM:** `llama-3.3-70b-versatile` (via Groq) for primary reasoning and `gpt-4o` for evaluation.
+- **Embeddings:** `nomic-ai/nomic-embed-text-v1.5`
+- **Vector DB:** Pinecone (Serverless on AWS)
+- **Frameworks:** LangChain, LangGraph, LangSmith
+
+## Evaluation Metrics
+
+The system is continuously evaluated using a dedicated dataset (CGU Q&A) and the following graders:
+
+| Metric               | Description                                                     |
+|----------------------|-----------------------------------------------------------------|
+| Correctness          | Factual accuracy compared to Ground Truth                       |
+| Groundedness         | Ensures the answer is derived strictly from provided FACTS      |
+| Relevance            | Measures how well the answer addresses the user's QUESTION      |
+| Retrieval Relevance  | Grades the quality of documents fetched by the retrievers       |
