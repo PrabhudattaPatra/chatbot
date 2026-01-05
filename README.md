@@ -45,7 +45,7 @@ Implements `AsyncPostgresSaver` for persistent thread management, allowing for m
 
 ## LangGraph Workflow
 
-![RAG Workflow Graph](D:\abhi_project\image.png)
+![RAG Workflow Graph](/image.png)
 
 ## Technical Stack
 
