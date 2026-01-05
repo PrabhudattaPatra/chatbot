@@ -1,108 +1,85 @@
-import logging
+import json
 import uuid
 from contextlib import asynccontextmanager
-from typing import Optional, List, Dict, Any
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+
 from langchain_groq import ChatGroq
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-from langchain_core.messages import ToolMessage
+from langchain_core.messages import AIMessageChunk
 
+# Imports from your project structure
 from core.config import ANSWER_MODEL_NAME, DATABASE_URL
 from graph.workflow import build_graph
 
-# --- Global Graph State ---
-# This holds the compiled graph to be reused across all requests
 app_state = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Handles setup and teardown of the global graph and database pool."""
-    
-    # 1. Correctly enter the AsyncPostgresSaver context manager
+    """Initializes the graph and database connection once at startup."""
     async with AsyncPostgresSaver.from_conn_string(DATABASE_URL) as checkpointer:
-        
-        # 2. Setup the LLM
-        llm = ChatGroq(
-            model=ANSWER_MODEL_NAME, 
-            temperature=0
-        )
-        
-        # 3. Build and Compile the graph ONCE
-        # The checkpointer is now the actual object, not a context manager
+        # Enable streaming at the LLM level for real-time tokens
+        llm = ChatGroq(model=ANSWER_MODEL_NAME, temperature=0, streaming=True)
+        # build_graph should return the compiled graph using the checkpointer
         app_state["graph"] = build_graph(llm, checkpointer=checkpointer)
-        
-        print("Application startup complete: Graph and Checkpointer initialized.")
-        
-        yield  # The app stays in this state while running
-        
-    # Connections are automatically closed when exiting the 'async with' block
+        print("Backend Ready: Streaming Graph Initialized.")
+        yield
     app_state.clear()
 
-app = FastAPI(title="CGU RAG Agent API", lifespan=lifespan)
+app = FastAPI(title="CGU RAG Streaming API", lifespan=lifespan)
+
+# Essential CORS middleware for Frontend communication
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class ChatRequest(BaseModel):
     message: str
     thread_id: Optional[str] = None
 
-class ChatResponse(BaseModel):
-    thread_id: str
-    response: str
-    updates: List[Dict[str, Any]]
-    used_retrievers: List[str] = []
-
-@app.post("/chat", response_model=ChatResponse)
+@app.post("/chat")
 async def chat_endpoint(request: ChatRequest):
     thread_id = request.thread_id or str(uuid.uuid4())
-    
-    # Configuration including the thread_id for state retrieval
-    CONFIG = {
-        "configurable": {"thread_id": thread_id},
-        "metadata": {"thread_id": thread_id},
-        "run_name": "chat_turn",
-    }
-    
+    config = {"configurable": {"thread_id": thread_id}}
     inputs = {"messages": [{"role": "user", "content": request.message}]}
-    final_response = ""
-    node_updates = []
-    triggered_retrievers = set()
-
-    # Access the pre-compiled graph from global state
+    
     graph = app_state.get("graph")
     if not graph:
         raise HTTPException(status_code=500, detail="Graph not initialized")
 
-    try:
-        # We only call .astream(), no building or compiling happens here
-        async for chunk in graph.astream(inputs, CONFIG, stream_mode="updates"):
-            for node, update in chunk.items():
-                if "messages" in update:
-                    for msg in update["messages"]:
-                        # Capture tool usage (retrievers)
-                        if isinstance(msg, ToolMessage):
-                            triggered_retrievers.add(msg.name) 
-                        
-                        node_updates.append({
-                            "node": node, 
-                            "content": str(msg.content),
-                            "type": msg.__class__.__name__
-                        })
+    async def stream_generator():
+        triggered_tools = set()
+        
+        # 'messages' stream_mode allows capturing token deltas in real-time
+        async for msg, metadata in graph.astream(inputs, config, stream_mode="messages"):
+            # 1. Detect and stream Tool Usage (for source badges)
+            if isinstance(msg, AIMessageChunk) and msg.tool_call_chunks:
+                for chunk in msg.tool_call_chunks:
+                    if chunk.get("name"):
+                        tool_name = chunk["name"]
+                        if tool_name not in triggered_tools:
+                            triggered_tools.add(tool_name)
+                            yield f"data: {json.dumps({'type': 'tool', 'name': tool_name})}\n\n"
 
-                    # Final answer capture [cite: 538, 615]
-                    if node == "generate_answer":
-                        final_response = update["messages"][-1].content
+            # 2. Stream AI Response Content (text tokens)
+            if isinstance(msg, AIMessageChunk) and msg.content:
+                yield f"data: {json.dumps({'type': 'content', 'delta': msg.content})}\n\n"
 
-        if not final_response and node_updates:
-            final_response = node_updates[-1]["content"]
+        # 3. Final event to provide the current thread_id to the frontend
+        yield f"data: {json.dumps({'type': 'end', 'thread_id': thread_id})}\n\n"
 
-        return ChatResponse(
-            thread_id=thread_id,
-            response=final_response,
-            updates=node_updates,
-            used_retrievers=list(triggered_retrievers)
-        )
+    return StreamingResponse(stream_generator(), media_type="text/event-stream")
 
-    except Exception as e:
-        logging.error(f"Error in chat endpoint: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+# uvicorn app.main:app --reload

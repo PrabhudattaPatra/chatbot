@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CGU Streaming Chatbot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .chat-area { height: calc(100vh - 160px); }
+        .tool-badge { font-size: 10px; background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px; margin-bottom: 4px; font-weight: bold; text-transform: uppercase; border: 1px solid #bbf7d0; }
+        .ai-bubble { background: #15803d; color: white; border-radius: 1rem 0 1rem 1rem; }
+        .user-bubble { background: white; border: 1px solid #e5e7eb; border-radius: 0 1rem 1rem 1rem; }
+    </style>
+</head>
+<body class="bg-slate-50 flex flex-col h-screen overflow-hidden">
+
+    <header class="bg-white border-b p-4 flex justify-between items-center shadow-sm">
+        <h1 class="text-xl font-bold text-green-800 tracking-tight">CGU Chatbot</h1>
+        <button onclick="resetChat()" class="text-sm font-semibold bg-slate-100 hover:bg-slate-200 px-4 py-1 rounded-md transition">new chat</button>
+    </header>
+
+    <main id="chat-window" class="chat-area overflow-y-auto p-4 md:p-8 flex flex-col space-y-6"></main>
+
+    <footer class="p-4 bg-white border-t">
+        <div class="max-w-4xl mx-auto flex items-center bg-slate-100 rounded-full px-5 py-2 border focus-within:ring-2 ring-green-500 transition-all">
+            <input type="text" id="user-input" class="flex-1 bg-transparent border-none outline-none text-slate-700" placeholder="Ask me anything about CGU...">
+            <button onclick="handleSend()" class="text-green-700 font-bold ml-2">send</button>
+        </div>
+    </footer>
+
+    <script>
+        let threadId = crypto.randomUUID();
+        const toolLabels = {
+            'retrieve_blog_posts': 'University Wiki',
+            'retrieve_examination_cell_doc': 'Exam Cell',
+            'retrieve_notice_board_doc': 'Notice Board',
+            'websearch_tool': 'External Search'
+        };
+
+        function resetChat() {
+            document.getElementById('chat-window').innerHTML = '';
+            threadId = crypto.randomUUID();
+        }
+
+        async function handleSend() {
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            appendUserMessage(text);
+            input.value = '';
+
+            const aiUI = createAIPlaceholder();
+            let fullText = "";
+
+            try {
+                const response = await fetch('http://localhost:8000/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, thread_id: threadId })
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    lines.forEach(line => {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                if (data.type === 'content') {
+                                    fullText += data.delta;
+                                    aiUI.bubble.innerText = fullText;
+                                } else if (data.type === 'tool') {
+                                    addToolBadge(aiUI.container, data.name);
+                                }
+                            } catch (e) { /* skip malformed JSON */ }
+                        }
+                    });
+                    scrollToBottom();
+                }
+            } catch (err) {
+                aiUI.bubble.innerText = "Error: Check backend connection and CORS.";
+            }
+        }
+
+        function appendUserMessage(text) {
+            const win = document.getElementById('chat-window');
+            const div = document.createElement('div');
+            div.className = "flex flex-col items-start";
+            div.innerHTML = `<div class="user-bubble px-4 py-2 shadow-sm max-w-[80%] text-slate-700">${text}</div>`;
+            win.appendChild(div);
+            scrollToBottom();
+        }
+
+        function createAIPlaceholder() {
+            const win = document.getElementById('chat-window');
+            const wrapper = document.createElement('div');
+            wrapper.className = "flex flex-col items-end w-full";
+            
+            const badgeContainer = document.createElement('div');
+            badgeContainer.className = "flex gap-1 mb-1";
+            
+            const bubble = document.createElement('div');
+            bubble.className = "ai-bubble px-4 py-2 shadow-md max-w-[80%] min-h-[40px]";
+            bubble.innerText = "Searching...";
+
+            wrapper.appendChild(badgeContainer);
+            wrapper.appendChild(bubble);
+            win.appendChild(wrapper);
+            return { container: badgeContainer, bubble: bubble };
+        }
+
+        function addToolBadge(container, name) {
+            if ([...container.children].some(b => b.dataset.name === name)) return;
+            const badge = document.createElement('span');
+            badge.className = "tool-badge";
+            badge.dataset.name = name;
+            badge.innerText = `Used: ${toolLabels[name] || name}`;
+            container.appendChild(badge);
+        }
+
+        function scrollToBottom() {
+            const win = document.getElementById('chat-window');
+            win.scrollTop = win.scrollHeight;
+        }
+
+        document.getElementById('user-input').addEventListener('keypress', e => e.key === 'Enter' && handleSend());
+    </script>
+</body>
+</html>

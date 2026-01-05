@@ -1,21 +1,19 @@
 from langchain.messages import HumanMessage, ToolMessage
 from graph.prompts import REWRITE_PROMPT
-
+from graph.common import get_latest_user_question
 def rewrite_question(state, llm):
+    """Rewrite the original user question."""
     messages = state["messages"]
-
-    # 🔒 Do NOT rewrite if tools already returned content
+    # Safety: do not rewrite if tool already returned content
     if any(isinstance(m, ToolMessage) and m.content.strip() for m in messages):
         return {"rewrite_count": state.get("rewrite_count", 0)}
+    question = get_latest_user_question(messages)
 
-    question = next(
-        m.content for m in reversed(messages) if isinstance(m, HumanMessage)
-    )
-
+    current_count = state.get("rewrite_count", 0)
     prompt = REWRITE_PROMPT.format(question=question)
     response = llm.invoke([{"role": "user", "content": prompt}])
-
     return {
         "messages": [HumanMessage(content=response.content)],
-        "rewrite_count": state.get("rewrite_count", 0) + 1,
+        "rewrite_count": current_count + 1
     }
+

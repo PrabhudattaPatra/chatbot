@@ -47,7 +47,7 @@ EMBEDDING_DIMENSION = 768
 # ===============================
 # LLM Configuration
 # ===============================
-ANSWER_MODEL_NAME = "llama-3.3-70b-versatile"
+ANSWER_MODEL_NAME = "llama-3.1-8b-instant"
 VISION_MODEL_NAME = "gemini-2.5-flash-lite"
 
 # ===============================

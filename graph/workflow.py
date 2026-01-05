@@ -44,76 +44,42 @@ def build_graph(llm, checkpointer=None):
     # ===============================
     workflow = StateGraph(AgentState)
 
-    # ===============================
-    # Add nodes (llm injected via lambda)
-    # ===============================
-    workflow.add_node(
-        "generate_query_or_respond",
+
+    # Define the nodes we will cycle between
+    workflow.add_node("generate_query_or_respond",
         lambda s: generate_query_or_respond(s, llm),
     )
+    workflow.add_node("retrieve", tool_node)
+    workflow.add_node("rewrite_question", lambda s: rewrite_question(s, llm))
+    workflow.add_node("generate_answer", lambda s: generate_answer(s, llm))
 
-    workflow.add_node(
-        "retrieve",
-        tool_node,
-    )
-
-    workflow.add_node(
-        "rewrite_question",
-        lambda s: rewrite_question(s, llm),
-    )
-
-    workflow.add_node(
-        "generate_answer",
-        lambda s: generate_answer(s, llm),
-    )
-
-    # ===============================
-    # Entry point
-    # ===============================
     workflow.add_edge(START, "generate_query_or_respond")
 
-    # ===============================
-    # Decide whether to call tools
-    # ===============================
+    # Decide whether to retrieve
     workflow.add_conditional_edges(
         "generate_query_or_respond",
+        # Assess LLM decision (call `retriever_tool` tool or respond to the user)
         tools_condition,
         {
+            # Translate the condition outputs to nodes in our graph
             "tools": "retrieve",
             END: END,
         },
     )
 
-    # ===============================
-    # Grade retrieved documents
-    # ===============================
+    # Edges taken after the `action` node is called.
     workflow.add_conditional_edges(
         "retrieve",
-        lambda s: grade_documents(s, llm),
-        {
-            "generate_answer": "generate_answer",
-            "rewrite_question": "rewrite_question",
-        },
+        # Assess agent decision
+        lambda s: grade_documents(s, llm)
     )
-
-    # ===============================
-    # Rewrite → back to decision
-    # ===============================
-    workflow.add_edge("rewrite_question", "generate_query_or_respond")
-
-    # ===============================
-    # Hallucination check after answer
-    # ===============================
     workflow.add_conditional_edges(
         "generate_answer",
-        lambda s: check_hallucination(s, llm),
-        {
-            END: END,
-            "rewrite_question": "rewrite_question",
-        },
+        # Assess agent decision
+        lambda s: check_hallucination(s, llm)
     )
+    workflow.add_edge("generate_answer", END)
+    workflow.add_edge("rewrite_question", "generate_query_or_respond")
 
-    # ===============================
-    # Compile graph
-    # ===============================
+    # Compile
     return workflow.compile(checkpointer=checkpointer)

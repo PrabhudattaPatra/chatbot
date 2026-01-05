@@ -1,21 +1,15 @@
 import logging
 from typing import Literal
-from langchain_core.messages import ToolMessage, HumanMessage
 from core.models import GradeDocuments
 from graph.prompts import GRADE_PROMPT
-
+from graph.common import get_latest_user_question 
 logger = logging.getLogger(__name__)
 
 
 
-def _latest_user_question(messages):
-    for msg in reversed(messages):
-        if isinstance(msg, HumanMessage):
-            return msg.content
-    return ""
 
 def grade_documents(state, llm) -> Literal["generate_answer", "rewrite_question"]:
-    question = _latest_user_question(state["messages"])
+    question = get_latest_user_question(state["messages"])
     rewrite_count = state.get("rewrite_count", 0)
 
     context = state["messages"][-1].content
